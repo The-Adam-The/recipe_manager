@@ -1,8 +1,7 @@
-import json
 import os
-import pathlib
 import time
 from RecipeManager import add_recipe_manager
+from MenuGenerator import menu_generator 
 
 if __name__ == '__main__':
     
@@ -13,6 +12,7 @@ if __name__ == '__main__':
         print("Recipe Manager")
         print("")
         print("    1. Add Recipe")
+        print("    2. Generate Weekly Menu")
         print("    Q. Quit")
         print("")
         print("---------------")
@@ -22,6 +22,9 @@ if __name__ == '__main__':
         
         if option == "1":
             add_recipe_manager()
+        elif option == "2":
+            menu_generator()
+            continue
         elif option == "Q":
             app_running = False
             

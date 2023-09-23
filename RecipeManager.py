@@ -30,12 +30,17 @@ def show_recipe_details(recipe, nonperishables, perishables, current_ingredient)
         print("")
         print("        Nonperishable:")
         for ingredient in nonperishables:
-            print("           - " + ingredient["name"] + " " + ingredient["quantity"] + ingredient["unit"])              
+            print("           - " + ingredient["name"] + " " + str(ingredient["quantity"]) + ingredient["unit"])              
     if perishables:
         print("")
         print("        Perishable:")
         for ingredient in perishables:
-            print("          - " + ingredient["name"] + " " + ingredient["quantity"] +  ingredient["unit"])
+            print("          - " + ingredient["name"] + " " + str(ingredient["quantity"]) +  ingredient["unit"])
+    
+    if perishables or nonperishables:
+        print("")
+        print("Total Number of ingredients: ", len(perishables) + len(nonperishables))
+
     if recipe["category"]:
         print("")
         print("******************************")
@@ -84,7 +89,7 @@ def ingredient_quanitity_check(ingredient, recipe, nonperishables, perishables, 
         if ingredient_quantity == "Q":
             exit(1)
         elif is_integer(ingredient_quantity) or is_float(ingredient_quantity):
-            ingredient["quantity"] = str(ingredient_quantity)
+            ingredient["quantity"] = float(ingredient_quantity)
             show_recipe_details(recipe, nonperishables, perishables, current_ingredient)
             return
         else:
@@ -97,13 +102,13 @@ def ingredient_unit_check(ingredient, recipe, nonperishables, perishables, curre
         ingredient_unit = input("Enter Ingredient Unit: ").lower().strip()
         if ingredient_unit == "Q":
             exit(1)
-        elif ingredient_unit == "ml" or ingredient_unit == "g" or ingredient_unit == "tsp" or ingredient_unit == "tbsp" or ingredient_unit == "unit":
-            ingredient["unit"] = str(ingredient_unit)
+        elif ingredient_unit == "ml" or ingredient_unit == "g" or ingredient_unit == "tsp" or ingredient_unit == "tbsp" or ingredient_unit == "u":
+            ingredient["unit"] = ingredient_unit
             show_recipe_details(recipe, nonperishables, perishables, current_ingredient)
             return
         else:
             show_recipe_details(recipe, nonperishables, perishables, current_ingredient)
-            print(f"Invalid Input '{ingredient_unit}'. Needs to be 'ml', 'g', 'tsp', 'tbsp', or 'unit'. Please try again.")
+            print(f"Invalid Input '{ingredient_unit}'. Needs to be 'ml', 'g', 'tsp', 'tbsp', or 'u (unit)'. Please try again.")
 
 
 def enter_ingredient(ingredient_type: str, recipe, nonperishables, perishables, current_ingredient):
@@ -124,10 +129,9 @@ def enter_ingredient(ingredient_type: str, recipe, nonperishables, perishables, 
             show_recipe_details(recipe, nonperishables, perishables, current_ingredient)
             
             ingredient_quanitity_check(ingredient, recipe, nonperishables, perishables, current_ingredient)
-            current_ingredient = ingredient["name"] + " " + ingredient["quantity"]
+            current_ingredient = ingredient["name"] + " " + str(ingredient["quantity"])
             show_recipe_details(recipe, nonperishables, perishables, current_ingredient)
             
-
             ingredient_unit_check(ingredient, recipe, nonperishables, perishables, current_ingredient)
             current_ingredient += ingredient["unit"]
             show_recipe_details(recipe, nonperishables, perishables, current_ingredient)
@@ -255,6 +259,7 @@ def add_recipe_manager():
 
         elif option == "3":
             show_recipe_details(recipe, nonperishables, perishables, current_ingredient)
+            recipe["date_created"] = time.strftime("%Y-%m-%d")
             if not pathlib.Path('recipes.json').exists():
                 print("Creating new file 'recipes.json'...")
                 recipe["id"] = 0
@@ -263,8 +268,10 @@ def add_recipe_manager():
             else:
                 print("Appending to new recipes to 'recipes.json'...")
                 with open('recipes.json', 'r') as f:
-                    recipes = json.load(f)                        
-                    recipe["id"] = len(recipes["recipes"])
+                    recipes = json.load(f)
+                    id = len(recipes["recipes"])
+                    print("Recipe Card Number: ", id)                        
+                    recipe["id"]
 
                 with open('recipes.json', 'w') as f:
                     recipes["recipes"].append(recipe)
