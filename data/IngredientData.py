@@ -21,8 +21,22 @@ class IngredientData:
         con = sqlite3.connect("recipes.db")
         cur = con.cursor()
         cur.execute("SELECT * FROM ingredients;")
-        return cur.fetchall()
+        ingredients = cur.fetchall()
+        output_ingredients = []
+        for ingredient in ingredients:
+            ingredient_dict = {"id": ingredient[0], "name":ingredient[1], "quantity":ingredient[2], "unit":ingredient[3], "recipe_id":ingredient[4], "perishable":ingredient[5]}
+            output_ingredients.append(ingredient_dict)
+
+        return output_ingredients
     
+    def get_ingredient_by_id(self, id):
+        con = sqlite3.connect("recipes.db")
+        cur = con.cursor()
+        cur.execute("SELECT * FROM ingredients WHERE ingredient_id = ?;", (id,))
+        ingredient = cur.fetchone()
+        ingredient_dict = {"id": ingredient[0], "name":ingredient[1], "quantity":ingredient[2], "unit":ingredient[3], "recipe_id":ingredient[4], "perishable":ingredient[5]}
+        return ingredient_dict
+
     def add_ingredient(self, ingredient: Ingredient):
         con = sqlite3.connect("recipes.db")
         cur = con.cursor()
@@ -43,3 +57,14 @@ class IngredientData:
         cur.execute("DELETE FROM ingredients WHERE ingredient_id = ?;", (id,))
         con.commit()
         return id
+    
+    def get_ingredients_by_recipe_id(self, recipe_id):
+        con = sqlite3.connect("recipes.db")
+        cur = con.cursor()
+        cur.execute("SELECT * FROM ingredients WHERE recipe_id = ?;", (recipe_id,))
+        ingredients = cur.fetchall()
+        output_ingredients = []
+        for ingredient in ingredients:
+            ingredient_dict = {"id": ingredient[0], "name":ingredient[1], "quantity":ingredient[2], "unit":ingredient[3], "recipe_id":ingredient[4], "perishable":ingredient[5]}
+            output_ingredients.append(ingredient_dict)
+        return output_ingredients

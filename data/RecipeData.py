@@ -1,4 +1,5 @@
 import sqlite3
+from models.Recipe import Recipe
 
 class RecipeData:
     
@@ -21,21 +22,20 @@ class RecipeData:
         con = sqlite3.connect("recipes.db")
         cur = con.cursor()
         cur.execute("SELECT * FROM recipes;")
-        return cur.fetchall()
+        all_recipes = cur.fetchall()
 
+        output_recipes = []
+
+        for recipe in all_recipes:
+            recipe_dict = {"id": recipe[0], "name":recipe[1], "category":recipe[2], "time":{"two": recipe[3], "four": recipe[4]}, "date_created":recipe[5]}
+            output_recipes.append(recipe_dict)
+        return output_recipes
+    
     def get_recipe_by_id(self, id):
         con = sqlite3.connect("recipes.db")
         cur = con.cursor()
         cur.execute("SELECT * FROM recipes WHERE recipe_id = ?;", (id,))
         return cur.fetchone()
-
-    # def get_all_recipes_and_ingredients(self):
-    #     con = sqlite3.connect("recipes.db")
-    #     cur = con.cursor()
-    #     cur.execute("""SELECT r.recipe_id,
-    #                     r.name, 
-    #                     i.name 
-    #                     FROM recipes as r;""") 
 
     def add_recipe(self, recipe):
         con = sqlite3.connect("recipes.db")
