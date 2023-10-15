@@ -3,12 +3,12 @@ from .IngredientSchema import Ingredient
 
 
 class RecipeBase(BaseModel):
-    id: int = None
+    id: int | None = None
     name: str
     last_used: str
     date_created: str
     category: str
-    # ingredients: list[Ingredient] | None = None
+    ingredients: list[Ingredient] | None = None
     time_two: int
     time_four: int
     

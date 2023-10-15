@@ -29,6 +29,7 @@ def create_table(db: SessionLocal = Depends(get_db)):
     RecipeData.create_table(db)
     return {"message": "Recipe Table created successfully"}
 
+
 @router.get("/recipes/droptable")
 def delete_table(db: SessionLocal = Depends(get_db)):
     RecipeData.drop_table(db)
@@ -37,24 +38,35 @@ def delete_table(db: SessionLocal = Depends(get_db)):
 
 @router.get("/recipes", response_model=list[schemas.Recipe])
 def read_recipes(skip: int = 0, limit: int = 100, db: SessionLocal = Depends(get_db)):
-    return RecipeData.get_recipes(db, skip, limit)
-    
+    recipes = RecipeData.get_recipes(db, skip, limit)
+    for recipe in recipes:
+        ingredients = IngredientData.get_ingredients_by_recipe_id(db, recipe.id)
+        recipe.ingredients = ingredients
+    return recipes
 
 @router.get("/recipes/{recipe_id}", response_model=schemas.Recipe)
 def read_recipe(recipe_id: int, db: SessionLocal = Depends(get_db)):
     db_recipe = RecipeData.get_recipe_by_id(db, recipe_id)
     if db_recipe is None:
         raise HTTPException(status_code=404, detail="Recipe not found")
+    ingredients = IngredientData.get_ingredients_by_recipe_id(db, recipe_id)
+    db_recipe.ingredients = ingredients
     return db_recipe
 
 
 @router.post("/recipes", response_model=schemas.Recipe)
-async def add_recipe(recipe: schemas.RecipeCreate, db: SessionLocal = Depends(get_db)):
-    logger.debug("Adding recipe: %s", recipe)
-    return RecipeData.add_recipe(db, recipe)
-            
+async def add_recipe(input_recipe: schemas.RecipeCreate, db: SessionLocal = Depends(get_db)):
+    logger.debug("Adding recipe: %s", input_recipe)
+    output_recipe = RecipeData.add_recipe(db, input_recipe)
+    output_ingredients = []
+    for ingredient in input_recipe.ingredients:
+        ingredient.recipe_id = output_recipe.id
+        output_ingredients.append(IngredientData.add_ingredient(db, ingredient))
+    output_recipe.ingredients = output_ingredients
+    return output_recipe
 
-#TODO: Re-add put and delete methods
+
+ 
 
 @router.put("/recipes/{recipe_id}", response_model=schemas.Recipe)
 async def update_recipe(recipe_id: int, recipe: schemas.RecipeCreate, db: SessionLocal = Depends(get_db)):

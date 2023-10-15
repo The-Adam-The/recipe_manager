@@ -33,7 +33,8 @@ def add_ingredient(db: Session, added_ingredient: schemas.IngredientCreate):
     db.add(db_ingredient)
     db.commit()
     db.refresh(db_ingredient)
-    return db_ingredient
+    added_ingredient.id = db_ingredient.id
+    return added_ingredient
 
 def update_ingredient(db: Session, id: int, ingredient: schemas.Ingredient):
     logger.debug("Updating ingredient: %s", ingredient)
@@ -58,13 +59,15 @@ def delete_ingredient(db: Session, id: int):
     db.commit()
     return True
 
-# def get_ingredients_by_recipe_id(self, recipe_id):
-#     con = sqlite3.connect("recipes.db")
-#     cur = con.cursor()
-#     cur.execute("SELECT * FROM ingredients WHERE recipe_id = ?;", (recipe_id,))
-#     ingredients = cur.fetchall()
-#     output_ingredients = []
-#     for ingredient in ingredients:
-#         ingredient_dict = {"id": ingredient[0], "name":ingredient[1], "quantity":ingredient[2], "unit":ingredient[3], "recipe_id":ingredient[4], "perishable":ingredient[5]}
-#         output_ingredients.append(ingredient_dict)
-#     return output_ingredients
+def get_ingredients_by_recipe_id(db, recipe_id):
+    logger.debug("Getting ingredients for recipe with id: %s", recipe_id)
+    db_query = db.query(Ingredient).filter(Ingredient.recipe_id == recipe_id)
+    ingredients = db_query.all()
+    output_ingredients = []
+
+    for ingredient in ingredients:
+        output_ingredients.append(schemas.Ingredient(id=ingredient.id, name=ingredient.name, 
+                                                     quantity=ingredient.quantity, unit=ingredient.unit, 
+                                                     recipe_id=ingredient.recipe_id, 
+                                                     perishable=ingredient.perishable))
+    return output_ingredients

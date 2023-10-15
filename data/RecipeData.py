@@ -33,7 +33,8 @@ def add_recipe(db: Session, recipe: schemas.RecipeCreate):
     db.add(db_recipe)
     db.commit()
     db.refresh(db_recipe)
-    return db_recipe
+    recipe.id = db_recipe.id
+    return recipe
 
 
 def update_recipe(db: Session, recipe_id: int, recipe: schemas.Recipe):
