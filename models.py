@@ -21,5 +21,5 @@ class Ingredient(Base):
     name = Column(String, index=True)
     quantity = Column(Integer)
     unit = Column(String)
-    recipe_id = (Integer, ForeignKey("recipes.id"))
+    recipe_id = Column(Integer, ForeignKey("recipes.id"))
     perishable = Column(Boolean, default=False)

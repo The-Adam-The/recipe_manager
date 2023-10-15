@@ -20,14 +20,17 @@ async def create_table(db = Depends(get_db)):
     data.create_table(db)
     return {"message": "Table created successfully"}
 
+
 @router.get("/ingredients/droptable")
 async def drop_table(db = Depends(get_db)):
     data.drop_table(db)
     return {"message": "Table deleted successfully"}
 
+
 @router.get("/ingredients", response_model = list[Ingredient])
 async def read_ingredients(skip: int = 0, limit: int = 100, db = Depends(get_db)):
     return data.get_ingredients(db, skip, limit)
+
 
 @router.get("/ingredients/{ingredient_id}", response_model=Ingredient)
 async def read_ingredient(ingredient_id: int, db = Depends(get_db)):
@@ -36,13 +39,15 @@ async def read_ingredient(ingredient_id: int, db = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Ingredient not found")
     return db_ingredient
 
+
 @router.post("/ingredients", response_model = list[Ingredient])
 async def add_ingredient(ingredients: list[Ingredient], db = Depends(get_db)):
     for ingredient in ingredients:
-        if data.get_ingredient_by_id(db,ingredient.id) is not None:
-            raise HTTPException(status_code=400, detail="Ingredient already exists")
-        else:
-            data.add_ingredients(db, ingredient)
+        if ingredient.id is not None:
+            if data.get_ingredient_by_id(db, ingredient.id) is not None:
+                raise HTTPException(status_code=400, detail="Ingredient already exists")
+        data.add_ingredient(db, ingredient)
+    return ingredients
 
 # TODO: Readd put and delete methods
 

@@ -5,11 +5,9 @@ class IngredientBase(BaseModel):
     name: str
     quantity: float
     unit: str
-    recipe_id: int | None = None
+    recipe_id: int | None
     recipe: str | None = None
     perishable: int | None = None
-    time_two: int | None = None
-    time_four: int | None = None
 
 
 class IngredientCreate(IngredientBase):
@@ -21,11 +19,9 @@ class Ingredient(IngredientBase):
     name: str
     quantity: float
     unit: str
-    recipe_id: int | None = None
+    recipe_id: int | None
     recipe: str | None = None
     perishable: int | None = None
-    time_two: int | None = None
-    time_four: int | None = None
     
     class Config:
         orm_mode = True
