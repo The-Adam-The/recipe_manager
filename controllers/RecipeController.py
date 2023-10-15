@@ -1,73 +1,85 @@
 from logging import getLogger, StreamHandler, DEBUG, Formatter
 from typing import Union
-from fastapi import FastAPI, Request, APIRouter
-import uvicorn
-from data.RecipeData import RecipeData
-from data.IngredientData import IngredientData 
-from models.Recipe import Recipe
-from models.Ingredient import Ingredient
-from pprint import pprint
-from json import JSONDecodeError
-import datetime
-import sys
+from fastapi import FastAPI, Request, APIRouter, Depends, HTTPException
+
+from data import RecipeData 
+from data import IngredientData
+from schemas import RecipeSchema as schemas
+from models import Recipe, Base
+from database import engine, SessionLocal
 
 
 logger = getLogger("recipe-logger")
+
+Base.metadata.create_all(bind=engine)
+
 router = APIRouter()
 
-recipe_data = RecipeData(logger)
-ingredient_data = IngredientData(logger)
+def get_db():
+    db = SessionLocal()
 
-@router.get("/recipes")
-def read_recipes():
     try:
-        recipes: list[dict] = recipe_data.get_all_recipes()
-        for recipe in recipes:
-            recipe["ingredients"] = ingredient_data.get_ingredients_by_recipe_id(recipe["id"])
-        return recipes
-    except Exception as e:
-        return {"message": "Unable to get recipes: error: " + str(e)}
+        yield db
+    finally:
+        db.close()
 
 
-@router.get("/recipes/{recipe_id}")
-def read_recipe(recipe_id: int):
-    try:
-        recipe = recipe_data.get_recipe_by_id(recipe_id)
-        recipe["ingredients"] = ingredient_data.get_ingredients_by_recipe_id(recipe_id)
-        return recipe
-    except Exception as e:
-        return {"message": "Unable to get recipe: error: " + str(e)}
+@router.get("/recipes/createtable")
+def create_table(db: SessionLocal = Depends(get_db)):
+    RecipeData.create_table(db)
+    return {"message": "Recipe Table created successfully"}
+
+@router.get("/recipes/droptable")
+def delete_table(db: SessionLocal = Depends(get_db)):
+    RecipeData.drop_table(db)
+    return {"message": "Recipe Table deleted successfully"}
+
+
+@router.get("/recipes", response_model=list[schemas.Recipe])
+def read_recipes(skip: int = 0, limit: int = 100, db: SessionLocal = Depends(get_db)):
+    return RecipeData.get_recipes(db, skip, limit)
     
 
-@router.post("/recipes")
-async def add_recipe(recipe: Recipe):
-    try:
-        logger.info("Adding recipe: %s", recipe.name)
-        recipe_id = recipe_data.add_recipe(recipe)
-        if recipe.ingredients:
-            for ingredient in recipe.ingredients:
-                ingredient.recipe_id = recipe_id
-                ingredient.id = ingredient_data.add_ingredient(ingredient)
-        return recipe
+@router.get("/recipes/{recipe_id}", response_model=schemas.Recipe)
+def read_recipe(recipe_id: int, db: SessionLocal = Depends(get_db)):
+    db_recipe = RecipeData.get_recipe_by_id(db, recipe_id)
+    if db_recipe is None:
+        raise HTTPException(status_code=404, detail="Recipe not found")
+    return db_recipe
+
+
+@router.post("/recipes", response_model=schemas.Recipe)
+async def add_recipe(recipe: schemas.RecipeCreate, db: SessionLocal = Depends(get_db)):
+    logger.debug("Adding recipe: %s", recipe)
+    return RecipeData.add_recipe(db, recipe)
             
-    except Exception as e:
-        logger.error("Unable to add recipe: error: " + str(e))
-        return {"message": "Unable to add recipe: error: " + str(e)}
 
+#TODO: Re-add put and delete methods
 
-@router.put("/recipes/{recipe_id}")
-async def update_recipe(recipe_id: int, recipe: Recipe):
+@router.put("/recipes/{recipe_id}", response_model=schemas.Recipe)
+async def update_recipe(recipe_id: int, recipe: schemas.RecipeCreate, db: SessionLocal = Depends(get_db)):
     try:
-        updated_recipe = recipe_data.update_recipe(recipe_id, recipe)
+        db_recipe = RecipeData.get_recipe_by_id(db, recipe_id)
+        if db_recipe is None:
+            raise HTTPException(status_code=404, detail="Recipe not found")
+        updated_recipe = RecipeData.update_recipe(db, recipe_id, recipe)
         return updated_recipe
     except Exception as e:
         return {"message": "Unable to update recipe: error: " + str(e)}
 
+# @router.put("/recipes/{recipe_id}")
+# async def update_recipe(recipe_id: int, recipe: Recipe):
+#     try:
+#         updated_recipe = recipe_data.update_recipe(recipe_id, recipe)
+#         return updated_recipe
+#     except Exception as e:
+#         return {"message": "Unable to update recipe: error: " + str(e)}
 
-@router.delete("/recipes/{recipe_id}")
-async def delete_recipe(recipe_id: int):
-    try:
-        recipe_data.delete_recipe(recipe_id)
-        return {"message": f"Recipe'{recipe_id}' deleted successfully"}
-    except Exception as e:
-        return {"message": "Unable to delete recipe: error: " + str(e)} 
+
+# @router.delete("/recipes/{recipe_id}")
+# async def delete_recipe(recipe_id: int):
+#     try:
+#         recipe_data.delete_recipe(recipe_id)
+#         return {"message": f"Recipe'{recipe_id}' deleted successfully"}
+#     except Exception as e:
+#         return {"message": "Unable to delete recipe: error: " + str(e)} 

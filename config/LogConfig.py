@@ -15,6 +15,6 @@ log_config = {
         },
     },
     "loggers": {
-        "recipe-logger": {"handlers": ["default"], "level": "INFO"},
+        "recipe-logger": {"handlers": ["default"], "level": "DEBUG"},
     },
 }

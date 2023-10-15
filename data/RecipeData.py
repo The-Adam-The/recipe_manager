@@ -1,70 +1,71 @@
-import sqlite3
-from models.Recipe import Recipe
+from sqlalchemy.orm import Session
+from sqlalchemy.sql import text
+from schemas import RecipeSchema as schemas
+from models import Recipe
+from logging import getLogger
 
-class RecipeData:
-    
-    def __init__(self, logger):
+logger = getLogger("recipe-logger")
 
-        self._logger = logger
-        self.create_recipes_table()
+def create_table(db: Session):
+    logger.debug("Creating recipes table")
+    db.execute(text("CREATE TABLE IF NOT EXISTS recipes(id INTEGER PRIMARY KEY, name TEXT NOT NULL, category TEXT NOT NULL, time_two INTEGER,  time_four INTEGER, date_created TEXT NOT NULL, last_used TEXT);"))
+    db.commit()
 
-    def create_recipes_table(self):
-        self._logger.info("Creating recipes table")
-        con = sqlite3.connect("recipes.db")
-        con.execute("DROP TABLE IF EXISTS recipes;")
-        con.execute("CREATE TABLE IF NOT EXISTS recipes(recipe_id integer PRIMARY KEY, name text NOT NULL, tags text NOT NULL, time_two integer,  time_four integer, date_created text NOT NULL, last_used text);")
-        con.commit()
-    
-    def drop_recipes_table(self):
-        self._logger.info("Dropping recipes table")
-        con = sqlite3.connect("recipes.db")
-        con.execute("DROP TABLE IF EXISTS recipes;")
-        con.commit()
+def drop_table(db: Session):
+    logger.debug("Dropping recipes table")
+    db.execute(text("DROP TABLE IF EXISTS recipes;"))
+    db.commit()
 
-    def get_all_recipes(self):
-        con = sqlite3.connect("recipes.db")
-        cur = con.cursor()
-        cur.execute("SELECT * FROM recipes;")
-        all_recipes = cur.fetchall()
 
-        output_recipes = []
+def get_recipes(db: Session, skip: int = 0, limit: int = 100):
+    logger.debug("Getting recipes")
+    return db.query(Recipe).offset(skip).limit(limit).all()
 
-        for recipe in all_recipes:
-            recipe_dict = {"id": recipe[0], "name":recipe[1], "category":recipe[2], "time":{"two": recipe[3], "four": recipe[4]}, "date_created":recipe[5], "last_used":recipe[6]}
-            output_recipes.append(recipe_dict)
-        return output_recipes
-    
-    def get_recipe_by_id(self, id):
-        con = sqlite3.connect("recipes.db")
-        cur = con.cursor()
-        cur.execute("SELECT * FROM recipes WHERE recipe_id = ?;", (id,))
-        return cur.fetchone()
 
-    def add_recipe(self, recipe):
-        con = sqlite3.connect("recipes.db")
-        cur = con.cursor()
-        cur.execute("INSERT INTO recipes VALUES (?, ?, ?, ?, ?, ?, ?);", (None, recipe.name, recipe.category, recipe.time["two"], recipe.time["four"], recipe.date_created, recipe.last_used))
-        con.commit()
-        return cur.lastrowid
-    
-    
-    def update_recipe(self, id, recipe):
-        con = sqlite3.connect("recipes.db")
-        cur = con.cursor()
-        if recipe is type(Recipe):
-            self._logger.debug("type is Recipe()")
-            cur.execute("UPDATE recipes SET name = ?, tags = ?, time_two = ?, time_four = ?, last_used = ? WHERE recipe_id = ?;", (recipe.name, recipe.category, recipe.time["two"], recipe.time["four"], recipe.last_used, id))
-        elif recipe is type(dict):
-            self._logger.debug("type is dict")
-            cur.execute("UPDATE recipes SET name = ?, tags = ?, time_two = ?, time_four = ?, last_used = ? WHERE recipe_id = ?;", (recipe["name"], recipe["category"], recipe["time"]["two"], recipe["time"]["four"], recipe["last_used"], id))
+def get_recipe_by_id(db: Session, id: int):
+    logger.debug("Getting recipe by id: %s", id)
+    return db.query(Recipe).filter(Recipe.id == id).first()
 
-        # cur.execute("UPDATE recipes SET name = ?, tags = ?, time_two = ?, time_four = ?, last_used = ? WHERE recipe_id = ?;", (recipe.name, recipe.category, recipe.time["two"], recipe.time["four"], recipe.last_used, id))
-        con.commit()
-        return recipe
-    
-    def delete_recipe(self, id):
-        con = sqlite3.connect("recipes.db")
-        cur = con.cursor()
-        cur.execute("DELETE FROM recipes WHERE recipe_id = ?;", (id,))
-        con.commit()
-        return id
+
+def add_recipe(db: Session, recipe: schemas.RecipeCreate):
+    logger.debug("Adding recipe: %s", recipe)
+    db_recipe = Recipe(name=recipe.name, category=recipe.category, time_two=recipe.time_two, time_four=recipe.time_four, date_created=recipe.date_created, last_used=recipe.last_used)
+    db.add(db_recipe)
+    db.commit()
+    db.refresh(db_recipe)
+    return db_recipe
+
+#TODO: Readd put and delete methods
+
+def update_recipe(db: Session, recipe_id: int, recipe: schemas.Recipe):
+    logger.debug("Updating recipe: %s", recipe)
+    db_query = db.query(Recipe).filter(Recipe.id == recipe_id)
+    recipe_to_update = db_query.first()
+
+    recipe_to_update.name = recipe.name
+    recipe_to_update.category = recipe.category
+    recipe_to_update.time_two = recipe.time_two
+    recipe_to_update.time_four = recipe.time_four
+    recipe_to_update.date_created = recipe.date_created
+    recipe_to_update.last_used = recipe.last_used
+
+    db.add(recipe_to_update)
+    db.commit()
+    # db.refresh(recipe_model)
+    return recipe
+
+
+# def delete_recipe(self, id):
+#     con = sqlite3.connect("recipes.db")
+#     cur = con.cursor()
+#     cur.execute("DELETE FROM recipes WHERE recipe_id = ?;", (id,))
+#     con.commit()
+#     return id
+
+# def create_recipes_table(self):
+#     self._logger.info("Creating recipes table")
+#     con = sqlite3.connect("recipes.db")
+#     con.execute("DROP TABLE IF EXISTS recipes;")
+#     con.execute("CREATE TABLE IF NOT EXISTS recipes(recipe_id integer PRIMARY KEY, name text NOT NULL, tags text NOT NULL, time_two integer,  time_four integer, date_created text NOT NULL, last_used text);")
+#     con.commit()
+
