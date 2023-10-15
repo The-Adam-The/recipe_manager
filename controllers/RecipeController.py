@@ -67,19 +67,16 @@ async def update_recipe(recipe_id: int, recipe: schemas.RecipeCreate, db: Sessio
     except Exception as e:
         return {"message": "Unable to update recipe: error: " + str(e)}
 
-# @router.put("/recipes/{recipe_id}")
-# async def update_recipe(recipe_id: int, recipe: Recipe):
-#     try:
-#         updated_recipe = recipe_data.update_recipe(recipe_id, recipe)
-#         return updated_recipe
-#     except Exception as e:
-#         return {"message": "Unable to update recipe: error: " + str(e)}
 
-
-# @router.delete("/recipes/{recipe_id}")
-# async def delete_recipe(recipe_id: int):
-#     try:
-#         recipe_data.delete_recipe(recipe_id)
-#         return {"message": f"Recipe'{recipe_id}' deleted successfully"}
-#     except Exception as e:
-#         return {"message": "Unable to delete recipe: error: " + str(e)} 
+@router.delete("/recipes/{recipe_id}")
+async def delete_recipe(recipe_id: int, db: SessionLocal = Depends(get_db)):
+    try:
+        db_recipe = RecipeData.get_recipe_by_id(db, recipe_id)
+        if db_recipe is None:
+            raise HTTPException(status_code=404, detail="Recipe not found")
+        if RecipeData.delete_recipe(db, recipe_id):
+            return {"message": f"Recipe'{recipe_id}' deleted successfully"}
+        else:
+            return {"message": f"Unable to delete recipe '{recipe_id}'"}
+    except Exception as e:
+        return {"message": "Unable to delete recipe: error: " + str(e)} 

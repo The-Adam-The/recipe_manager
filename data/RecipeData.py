@@ -51,16 +51,16 @@ def update_recipe(db: Session, recipe_id: int, recipe: schemas.Recipe):
 
     db.add(recipe_to_update)
     db.commit()
-    # db.refresh(recipe_model)
     return recipe
 
 
-# def delete_recipe(self, id):
-#     con = sqlite3.connect("recipes.db")
-#     cur = con.cursor()
-#     cur.execute("DELETE FROM recipes WHERE recipe_id = ?;", (id,))
-#     con.commit()
-#     return id
+def delete_recipe(db: Session, id: int):
+    logger.debug("Deleting recipe with id: %s", id)
+    db_query = db.query(Recipe).filter(Recipe.id == id)
+    recipe_to_delete = db_query.first()
+    db.delete(recipe_to_delete)
+    db.commit()
+    return True
 
 # def create_recipes_table(self):
 #     self._logger.info("Creating recipes table")
