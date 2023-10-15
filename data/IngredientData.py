@@ -35,19 +35,28 @@ def add_ingredient(db: Session, added_ingredient: schemas.IngredientCreate):
     db.refresh(db_ingredient)
     return db_ingredient
 
-# def update_ingredient(self, id, ingredient):
-#     con = sqlite3.connect("recipes.db")
-#     cur = con.cursor()
-#     cur.execute("UPDATE ingredients SET name = ?, quantity = ?, unit = ?, recipe_id = ?, perishable = ? WHERE ingredient_id = ?;", (ingredient.name, ingredient.quantity, ingredient.unit, ingredient.recipe_id, ingredient.perishable, id))
-#     con.commit()
-#     return ingredient
+def update_ingredient(db: Session, id: int, ingredient: schemas.Ingredient):
+    logger.debug("Updating ingredient: %s", ingredient)
+    db_query = db.query(Ingredient).filter(Ingredient.id == id)
+    ingredient_to_update = db_query.first()
 
-# def delete_ingredient(self, id):
-#     con = sqlite3.connect("recipes.db")
-#     cur = con.cursor()
-#     cur.execute("DELETE FROM ingredients WHERE ingredient_id = ?;", (id,))
-#     con.commit()
-#     return id
+    ingredient_to_update.name = ingredient.name
+    ingredient_to_update.quantity = ingredient.quantity
+    ingredient_to_update.unit = ingredient.unit
+    ingredient_to_update.recipe_id = ingredient.recipe_id
+    ingredient_to_update.perishable = ingredient.perishable
+
+    db.add(ingredient_to_update)
+    db.commit()
+    return ingredient
+
+def delete_ingredient(db: Session, id: int):
+    logger.debug("Deleting ingredient with id: %s", id)
+    db_query = db.query(Ingredient).filter(Ingredient.id == id)
+    ingredient_to_delete = db_query.first()
+    db.delete(ingredient_to_delete)
+    db.commit()
+    return True
 
 # def get_ingredients_by_recipe_id(self, recipe_id):
 #     con = sqlite3.connect("recipes.db")

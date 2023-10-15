@@ -35,7 +35,6 @@ def add_recipe(db: Session, recipe: schemas.RecipeCreate):
     db.refresh(db_recipe)
     return db_recipe
 
-#TODO: Readd put and delete methods
 
 def update_recipe(db: Session, recipe_id: int, recipe: schemas.Recipe):
     logger.debug("Updating recipe: %s", recipe)
