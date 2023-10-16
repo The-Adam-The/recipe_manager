@@ -3,9 +3,11 @@ from fastapi import APIRouter, Depends
 from database import engine, SessionLocal
 from data import IngredientData
 from data import RecipeData
-from schemas import RecipeSchema
-from schemas import IngredientSchema
+from schemas import RecipeSchema, IngredientSchema, GroceryListSchema
 from logging import getLogger
+from datetime import datetime
+
+
 
 logger = getLogger("recipe-logger")
 
@@ -27,7 +29,7 @@ def get_db():
     finally:
         db.close()
 
-@router.get("/mealplanner/{num_meals}")
+@router.get("/mealplanner/{num_meals}", response_model=GroceryListSchema.GroceryList)
 async def meal_planner(num_meals: int, db: SessionLocal = Depends(get_db)):
     try:
         logger.info("Meal planner called. Num meals requested: %s", num_meals)
@@ -36,7 +38,7 @@ async def meal_planner(num_meals: int, db: SessionLocal = Depends(get_db)):
         unused_recipes = []
         used_recipes = []
         ingredients_list = {}
-        output_recipes = []
+        today_date = datetime.today().strftime('%Y-%m-%d')
 
         for recipe in recipes:
             recipe.ingredients: list[IngredientSchema.Ingredient] = IngredientData.get_ingredients_by_recipe_id(db, recipe.id)
@@ -62,9 +64,12 @@ async def meal_planner(num_meals: int, db: SessionLocal = Depends(get_db)):
             logger.debug("No unused recipes found, using all recipes")
             selected_recipes = used_recipes[:int(num_meals)]
 
+        meal_list = []
         try:
             for selected_recipe in selected_recipes:
+                meal_list.append([selected_recipe.name, selected_recipe.id])
                 logger.debug("Updating db with last_used date for recipe: %s", selected_recipe.name)
+                selected_recipe.last_used = today_date
                 # logger.debug("Selected recipe: %s", selected_recipe)
                 RecipeData.update_recipe(db, selected_recipe.id, selected_recipe)
                 # logger.debug("Adding recipe: %s", selected_recipe["name"])
@@ -83,11 +88,13 @@ async def meal_planner(num_meals: int, db: SessionLocal = Depends(get_db)):
                 sum_value = int(sum(value["quantities"])) if is_integer(value["quantities"][0]) and 1 <= int(sum(value["quantities"])) else float(value["quantities"][0])
                 ingredients_list[key]["total_quantity"] = sum_value
 
+            grocery_list = GroceryListSchema.GroceryList(ingredients=ingredients_list, meals=meal_list, date=today_date)
+
         except Exception as e:
             logger.error("Error consolidating ingredients: %s", e)
             return e
 
-        return ingredients_list
+        return grocery_list
 
     except Exception as e:
         return {"message": "Unable to get recipes: error: " + str(e)}
