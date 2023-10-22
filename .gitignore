@@ -2,3 +2,7 @@ __pycache__/
 .pyc*
 shopping_lists/
 recipes.db
+Lib/
+Include/
+Scripts/
+pyvenv.cfg
