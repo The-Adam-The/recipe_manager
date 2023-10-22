@@ -6,3 +6,47 @@ Lib/
 Include/
 Scripts/
 pyvenv.cfg
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+
+# Virtual environments
+venv/
+env/
+ENV/
+
+# IDEs and editors
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+
+# Local development settings
+*.env
+*.env.local
+*.env.*.local
+
+# Logs and databases
+*.log
+*.sqlite3
+*.db
+*.hdb
+*.fdb
+*.pdb
+
+# Other
+*.pyc
+*.bak
+*.swp
+*.tmp
+.DS_Store
