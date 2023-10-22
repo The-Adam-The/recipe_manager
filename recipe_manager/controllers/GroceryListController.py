@@ -8,7 +8,6 @@ from logging import getLogger
 from datetime import datetime
 
 
-
 logger = getLogger("recipe-logger")
 
 router = APIRouter()
@@ -29,7 +28,7 @@ def get_db():
     finally:
         db.close()
 
-@router.get("/mealplanner/{num_meals}", response_model=GroceryListSchema.GroceryList)
+@router.get("/grocerylist/{num_meals}", response_model=GroceryListSchema.GroceryList)
 async def meal_planner(num_meals: int, db: SessionLocal = Depends(get_db)):
     try:
         logger.info("Meal planner called. Num meals requested: %s", num_meals)
@@ -88,7 +87,7 @@ async def meal_planner(num_meals: int, db: SessionLocal = Depends(get_db)):
                 sum_value = int(sum(value["quantities"])) if is_integer(value["quantities"][0]) and 1 <= int(sum(value["quantities"])) else float(value["quantities"][0])
                 ingredients_list[key]["total_quantity"] = sum_value
 
-            grocery_list = GroceryListSchema.GroceryList(ingredients=ingredients_list, meals=meal_list, date=today_date)
+            grocery_list = GroceryListSchema.GroceryList(ingredients=ingredients_list, meals=meal_list, date=today_date, num_meals=len(meal_list))
 
         except Exception as e:
             logger.error("Error consolidating ingredients: %s", e)

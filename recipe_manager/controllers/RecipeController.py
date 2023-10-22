@@ -1,7 +1,6 @@
 from logging import getLogger, StreamHandler, DEBUG, Formatter
 from typing import Union
 from fastapi import FastAPI, Request, APIRouter, Depends, HTTPException
-
 from data import RecipeData 
 from data import IngredientData
 from schemas import RecipeSchema as schemas

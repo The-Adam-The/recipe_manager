@@ -1,6 +1,6 @@
 import uvicorn
 from fastapi import FastAPI
-from controllers import (RecipeController, IngredientController, MealPlannerController)
+from controllers import (RecipeController, IngredientController, GroceryListController)
 from logging.config import dictConfig
 from config.LogConfig import log_config
 from logging import getLogger
@@ -13,9 +13,7 @@ app = FastAPI(debug=True)
 
 app.include_router(RecipeController.router)
 app.include_router(IngredientController.router)
-app.include_router(MealPlannerController.router)
-
-
+app.include_router(GroceryListController.router)
 
 
 @app.get("/")

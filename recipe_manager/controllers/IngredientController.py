@@ -1,8 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends
 from data import IngredientData as data
 from schemas import IngredientSchema as schema
-# from models import Ingredient
-from database import engine, SessionLocal
+from database import SessionLocal
 from logging import getLogger
 
 logger = getLogger("recipe-logger")
