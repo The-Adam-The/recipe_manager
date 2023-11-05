@@ -1,5 +1,6 @@
 import uvicorn
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from controllers import (RecipeController, IngredientController, GroceryListController)
 from logging.config import dictConfig
 from config.LogConfig import log_config
@@ -15,6 +16,19 @@ config = configparser.ConfigParser()
 config.read("recipe_manager/config/config.ini")
 
 app = FastAPI(debug=True)
+
+origins = [
+    "http://localhost:3000", # React
+    "http://localhost:8000", # FastAPI
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["POST", "GET", "PUT", "DELETE"],
+    allow_headers=["*"],
+)
 
 app.include_router(RecipeController.router)
 app.include_router(IngredientController.router)
